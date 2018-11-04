@@ -1,4 +1,4 @@
 ---
-docker_user: admin
-docker_pass: xxxxx
+docker_user: username
+docker_pass: password
 docker_registry: docker-registry.com

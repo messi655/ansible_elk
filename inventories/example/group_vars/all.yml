@@ -1,8 +1,8 @@
 ---
 nginx_kibana_port: 8899
 elk_server_ssl_cert_port: 8999
-kibana_user: admin
-kibana_password: xxxxxx
+kibana_user: username
+kibana_password: password
 logstash_port: 5044
 es_port: 9200
 elk_server_1: 172.20.10.7
