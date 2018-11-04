@@ -11,6 +11,13 @@
 1) Edit file group_vars/all.yml
 
 ```
+docker_user: docker_private_username
+docker_pass: docker_private_password
+docker_registry: xxxx.com
+
+```
+
+```
 nginx_kibana_port: xxxx
 elk_server_ssl_cert_port: xxxx
 kibana_user: xxxx
@@ -23,15 +30,9 @@ elk_server_2: xxx.xxx.xxx.xxx
 logstash_server_2: xxx.xxx.xxx.xxx
 elk_proxy: xxx.xxx.xxx.xxx
 elk_proxy_port: xxx
-docker_user: docker_private_username
-docker_pass: docker_private_password
-
 ```
 2) Run 
-+ Build and push images to private docker registry
-```
- ansible-playbook --private-key /media/mount/Work/keys/private_key -i monitoring.hosts build_sites.yml
-```
+
 + Deploy ELK by docker
 ```
 ansible-playbook --private-key /media/mount/Work/keys/my_key -i monitoring.hosts deploy_sites.yml

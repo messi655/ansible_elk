@@ -14,8 +14,8 @@
     - { role: nginx , tags: ['nginx']}
 
 
-#- hosts: elk-client
-#  remote_user: centos
-#  sudo: yes
-#  roles:  
-#    - { role: filebeat, tags: ['filebeat'] }
+- hosts: elk-client
+  remote_user: centos
+  sudo: yes
+  roles:  
+    - { role: filebeat, tags: ['filebeat'] }

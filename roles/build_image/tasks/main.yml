@@ -1,5 +1,0 @@
----
-- include: es.yml
-- include: logstash.yml
-- include: kibana.yml
-- include: nginx.yml

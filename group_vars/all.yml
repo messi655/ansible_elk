@@ -1,4 +1,4 @@
 ---
 docker_user: admin
-docker_pass: Trust1ngS0c1@al
-docker_registry: docker-registry.trustingsocial.com
+docker_pass: xxxxx
+docker_registry: docker-registry.com
