@@ -1,0 +1,21 @@
+---
+- hosts: el
+  remote_user: centos
+  sudo: yes
+  roles:
+    - { role: elasticsearch, tags: ['elasticsearch']  }
+    - { role: logstash, tags: ['logstash'] }
+
+- hosts: k
+  remote_user: centos
+  sudo: yes
+  roles:
+    - { role: kibana , tags: ['kibana']}
+    - { role: nginx , tags: ['nginx']}
+
+
+#- hosts: elk-client
+#  remote_user: centos
+#  sudo: yes
+#  roles:  
+#    - { role: filebeat, tags: ['filebeat'] }

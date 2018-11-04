@@ -1,0 +1,110 @@
+input {
+  beats {
+    port => 5044
+    #codec => "json"
+  }
+}
+
+filter {
+  if [type] == "syslog" {
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:log_timestamp}|%{SYSLOGTIMESTAMP:log_timestamp} %{SYSLOGHOST:hostname} %{DATA:program}(?:\[%{POSINT:pid}\])?: %{GREEDYDATA:log_message}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:log_timestamp} : \(%{LOGLEVEL:log_level}\) %{GREEDYDATA:log_message}" }
+    }
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:log_timestamp} %{NUMBER:epoc_timestamp} \[%{LOGLEVEL:log_level}\] %{GREEDYDATA:log_message}" }
+    }
+    grok {
+      match => { "message" => "%{DATESTAMP_EVENTLOG:log_timestamp} %{NUMBER:epoc_timestamp} \[%{LOGLEVEL:log_level}\] %{GREEDYDATA:log_message}" }
+    }
+    syslog_pri { }
+    date {
+      match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+
+  if [type] == "docker" {
+    grok {
+      match => { "message" => "%{QS}:%{QS:log_message},%{QS}:%{QS:log_type},%{QS}:%{QS:time}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    
+    syslog_pri { }
+    date {
+      match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+
+  if [type] == "hadoop_management" {
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:log_timestamp} %{LOGLEVEL:log_level}%{SPACE}%{PROG:program} %{GREEDYDATA:log_message}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    date {
+      match => [ "timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+
+  if [type] == "nginx_error" {
+    grok {
+      match => { "message" => "(?<timestamp>%{YEAR}[./]%{MONTHNUM}[./]%{MONTHDAY} %{TIME}) \[%{LOGLEVEL:severity}\] %{POSINT:pid}#%{NUMBER:threadid}\: \*%{NUMBER:connectionid} %{GREEDYDATA:errormessage}, client: %{IP:client}, server: %{GREEDYDATA:server}, request: %{GREEDYDATA:request}, host: %{QS:host}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    
+    syslog_pri { }
+    date {
+      match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+
+  if [type] == "nginx_access" {
+    grok {
+      match => { "message" => "%{COMBINEDAPACHELOG}+%{GREEDYDATA:extra_fields}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    
+    syslog_pri { }
+    date {
+      match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+
+  if [type] == "hadoop" {
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:log_timestamp} %{LOGLEVEL:log_level}%{SPACE}%{PROG:program} %{GREEDYDATA:log_message}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    date {
+      match => [ "timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+  
+  if [type] == "yarn" {
+    grok {
+      match => { "message" => "%{TIMESTAMP_ISO8601:log_timestamp} %{LOGLEVEL:log_level}%{SPACE}%{PROG:program} %{GREEDYDATA:log_message}" }
+      add_field => [ "received_at", "%{@timestamp}" ]
+      add_field => [ "received_from", "%{host}" ]
+    }
+    date {
+      match => [ "timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+}
+
+output {
+elasticsearch {
+	hosts => ["{{elk_server_1}}:{{es_port}}", "{{elk_server_2}}:{{es_port}}"]
+	manage_template => false
+	index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+	document_type => "%{[@metadata][type]}"
+}
+}

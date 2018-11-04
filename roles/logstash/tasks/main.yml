@@ -1,0 +1,70 @@
+---
+
+- name: Create config folder for logstash
+  file: path=/opt/logstash/config state=directory
+
+- name: Create data folder for logstash
+  file: path=/opt/logstash/pipeline state=directory
+
+- name: copy crt key to server 
+  copy: src=logstash-forwarder.crt dest=/opt/logstash/config/
+
+- name: copy key to server 
+  copy: src=logstash-forwarder.key dest=/opt/logstash/config/
+
+- name: Login to private registry
+  docker_login:
+     registry: "{{ docker_registry }}"
+     username: "{{ docker_user }}"
+     password: "{{ docker_pass }}"
+
+- name: pull logstash image
+  docker_image: name={{ docker_registry }}/monitoring/logstash:5.6.1
+
+- name: Stop and remove container logstash
+  docker:
+    name: logstash
+    image: "{{ docker_registry }}/monitoring/logstash:5.6.1"
+    state: absent
+
+- name: Add pipeline for logstash
+  template: src=logstash.conf.j2 dest=/opt/logstash/pipeline/logstash.conf
+
+- name: Add config for logstash
+  copy: src=logstash.yml dest=/opt/logstash/config/logstash.yml
+
+- name: Add log4j2
+  copy: src=log4j2.properties dest=/opt/logstash/config/log4j2.properties
+
+- name: Load filebeat JSON index template
+  uri:
+    url: http://{{ elk_server_1 }}:9200/_template/filebeat?pretty
+    method: POST
+    body: "{{ lookup('file', 'filebeat-index-template.json') }}"
+    body_format: json
+  ignore_errors: true
+  become: true
+
+- name: Load filebeat JSON index template
+  uri:
+    url: http://{{ elk_server_2 }}:9200/_template/filebeat?pretty
+    method: POST
+    body: "{{ lookup('file', 'filebeat-index-template.json') }}"
+    body_format: json
+  ignore_errors: true
+  become: true
+
+
+
+- name: Start docker container
+  docker:
+     name: logstash
+     image: "{{ docker_registry }}/monitoring/logstash:5.6.1"
+     state: reloaded
+     ports:
+     - "5044:5044"
+     - "9600:9600"
+     restart_policy: always
+     volumes:
+     - "/opt/logstash/pipeline:/usr/share/logstash/pipeline:rw"
+     - "/opt/logstash/config:/usr/share/logstash/config:rw"

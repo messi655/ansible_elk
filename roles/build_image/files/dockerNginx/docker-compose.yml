@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  kibana:
+    image: docker.trustingsocial.local:5001/monitoring/kibana
+    container_name: kibana
+    volumes:
+     - "/opt/kibana/config/kibana.yml:/etc/kibana/kibana.yml"
+  nginx:
+    image: docker.trustingsocial.local:5001/monitoring/nginx
+    container_name: nginx
+    volumes:
+     - "/opt/nginx:/etc/nginx"
+    ports:
+     - "8899:8899"
+    links:
+     - kibana

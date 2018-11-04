@@ -1,0 +1,26 @@
+---
+
+- name: Login to private registry
+  docker_login:
+     registry: "{{ docker_registry }}"
+     username: "{{ docker_user }}"
+     password: "{{ docker_pass }}"
+
+- name: Check logstash images existed?
+  docker_image: name={{ docker_registry }}/monitoring/logstash:5.6.1
+  ignore_errors: yes
+  register: logstash_image
+  
+- name: pull logstash image
+  docker_image: name=docker.elastic.co/logstash/logstash:5.6.1
+  when: logstash_image != 0
+
+- name: Tag and push to private registry
+  docker_image: 
+     name: docker.elastic.co/logstash/logstash:5.6.1
+     repository: "{{ docker_registry }}/monitoring/logstash:5.6.1"
+     push: yes
+  when: logstash_image != 0
+
+- name: Remove image without tagging
+  docker_image: state=absent name=docker.elastic.co/logstash/logstash:5.6.1

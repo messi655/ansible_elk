@@ -1,0 +1,43 @@
+---
+
+- name: Copy filebeat yum repo file
+  copy:
+    src=filebeat.repo
+    dest=/etc/yum.repos.d/filebeat.repo
+    owner=root
+    group=root
+    mode=0644
+
+- name: Import Filebeat GPG Key
+  rpm_key: key=http://packages.elastic.co/GPG-KEY-elasticsearch state=present
+  
+
+- name: Install filebeat rpms
+  yum: name=filebeat state=present
+
+- name: Generate filebeat configuration template
+  template:
+    src=filebeat.yml.j2
+    dest=/etc/filebeat/filebeat.yml
+    owner=root
+    group=root
+    mode=0644
+  register: filebeat_needs_restart
+
+- name: Start filebeat service
+  command: systemctl start filebeat.service
+  ignore_errors: true
+  become: true
+  when: filebeat_needs_restart != 0
+
+- name: copy crt key
+  copy: src=logstash-forwarder.crt dest=/etc/filebeat/
+
+- name: copy key
+  copy: src=logstash-forwarder.key dest=/etc/filebeat/
+
+- name: Setup filebeat service
+  service: name=filebeat state=started enabled=true
+  
+- name: Restart filebeat service
+  command: systemctl restart filebeat.service

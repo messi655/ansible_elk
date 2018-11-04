@@ -1,0 +1,58 @@
+---
+- name: Create configure folder
+  file: path=/opt/kibana/config state=directory
+
+- name: Copy kibana filebeat dashboards
+  copy:
+    src=beats-dashboards.zip
+    dest=/tmp/beats-dashboards.zip
+    owner=root
+    group=root
+    mode=0644
+  
+- name: Install kibana filebeat dashboards
+  unarchive: src=/tmp/beats-dashboards.zip dest=/tmp/ copy=no
+  
+- name: Copy file load_1.sh to dashboards
+  template: src=load_1.sh.j2 dest=/tmp/beats-dashboards/load_1.sh
+
+- name: Copy file load_2.sh to dashboards
+  template: src=load_2.sh.j2 dest=/tmp/beats-dashboards/load_2.sh
+
+- name: Copy Kibana Docker folder
+  copy: src=dockerKB dest=/tmp/
+
+- name: Copy Kibana Dockerfile
+  template: src=Dockerfile.j2 dest=/tmp/dockerKB/Dockerfile
+
+- name: Copy kibana config
+  template: src=kibana.yml.j2 dest=/opt/kibana/config/kibana.yml
+
+- name: Set execute permission for load.sh
+  command: chmod 755 /tmp/beats-dashboards/load_1.sh
+
+- name: Set execute permission for load.sh
+  command: chmod 755 /tmp/beats-dashboards/load_2.sh
+
+- name: Configure kibana filebeat dashboards
+  shell: sh /tmp/beats-dashboards/load_1.sh -url "http://{{elk_server_1}}:9200"
+  ignore_errors: true
+
+- name: Configure kibana filebeat dashboards
+  shell: sh /tmp/beats-dashboards/load_2.sh -url "http://{{elk_server_2}}:9200"
+  ignore_errors: true
+
+- name: Login to private registry
+  docker_login:
+     registry: "{{ docker_registry }}"
+     username: "{{ docker_user }}"
+     password: "{{ docker_pass }}"
+
+- name: pull kibana docker image
+  docker_image: name={{ docker_registry }}/monitoring/kibana
+
+- name: Stop and remove container kibana
+  docker:
+    name: kibana
+    image: "{{ docker_registry }}/monitoring/kibana"
+    state: absent

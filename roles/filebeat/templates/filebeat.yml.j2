@@ -1,0 +1,68 @@
+filebeat:
+  prospectors:
+    - type: log
+      paths:
+        # OS
+        - /var/log/*.log
+        - /var/log/messages
+        - /var/log/secure
+        - /var/log/mysql/*.log
+      fields:
+        log_type: "syslog"
+
+    - type: log
+      paths:
+        # Nginx
+        - /var/log/nginx/error.log
+      fields:
+        log_type: "nginx_error"
+
+    - type: log
+      paths:
+        # Nginx
+        - /var/log/nginx/access.log
+      fields:
+        log_type: "nginx_access"
+
+
+    - type: log
+      paths:
+        # Docker
+        - /var/lib/docker/containers/*/*-json.log
+      fields:
+        log_type: "docker"
+            
+    - type: log
+      paths:
+        # hadoop management
+        - /var/log/ambari-metrics-monitor/ambari-metrics-monitor.out
+        - /var/log/ambari-server/*.log
+        - /var/log/ambari-agent/*.log
+        - /var/log/cloudera-scm-agent/*.log
+      fields:
+        log_type: "hadoop_management"
+
+    - type: log
+      paths:
+        # Hadoop
+        - /var/log/hadoop/hdfs/*.log
+        - /var/log/hadoop-hdfs/*.log.out
+      fields:
+        log_type: "hadoop"
+
+    - type: log
+      paths:
+        # YARN
+        - /var/log/hadoop-yarn/yarn/*.log
+        - /var/log/hadoop-yarn/*.log.out
+      fields:
+        log_type: "yarn"
+
+
+output:
+
+  logstash:
+    hosts: ["{{logstash_server_1}}:{{logstash_port}}","{{logstash_server_2}}:{{logstash_port}}"]
+    bulk_max_size: 1024
+    loadbalance: true
+    

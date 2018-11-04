@@ -1,0 +1,22 @@
+[build]
+monitoring ansible_host=172.20.10.7
+
+[k]
+monitoring ansible_host=172.20.10.7
+
+
+[el]
+monitoring ansible_host=172.20.10.7
+
+
+#[elk-client]
+#monitoring ansible_host=172.20.10.7
+#database03 ansible_ssh_host=172.20.10.6
+#scoreapi01 ansible_ssh_host=172.20.10.13
+#scoreapi02 ansible_ssh_host=172.20.10.50
+#scoreweb ansible_host=172.20.10.43
+#rundeck ansible_host=172.20.10.5
+
+
+
+

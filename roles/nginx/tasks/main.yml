@@ -1,0 +1,42 @@
+---
+
+- name: Create folder for Nginx
+  file: path=/tmp/dockerNginx state=directory
+
+- name: Create config folder for nginx
+  file: path=/opt/nginx state=directory
+
+- name: Create conf.d folder for nginx
+  file: path=/opt/nginx/conf.d state=directory
+
+- name: Add nginx.conf 
+  template: src=nginx.conf.j2 dest=/opt/nginx/nginx.conf
+
+- name: add kibana.conf
+  template: src=kibana.conf.j2 dest=/opt/nginx/conf.d/kibana.conf
+
+- name: Add docker compose
+  template: src=docker-compose.yml.j2 dest=/tmp/dockerNginx/docker-compose.yml
+
+- name: Create kibana admin user
+  copy: src=htpasswd.users dest=/opt/nginx/conf.d/
+  
+- name: Login to private registry
+  docker_login:
+     registry: "{{ docker_registry }}"
+     username: "{{ docker_user }}"
+     password: "{{ docker_pass }}"
+
+- name: pull nginx images
+  docker_image: name={{ docker_registry }}/monitoring/nginx
+
+- name: Stop and remove container nginx
+  docker:
+    name: nginx
+    image: "{{ docker_registry }}/monitoring/nginx"
+    state: absent
+  ignore_errors: yes
+
+- name: Start nginx and kibana
+  command: docker-compose -f /tmp/dockerNginx/docker-compose.yml up -d
+
